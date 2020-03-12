@@ -33,6 +33,9 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'djoser',
+
+    # django-notifs -- install and run migrations
+    'notifications'
 ]
 
 MIDDLEWARE = [
