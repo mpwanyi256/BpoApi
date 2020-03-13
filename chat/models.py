@@ -37,6 +37,10 @@ class ChatSession(TrackableDateModel):
     uri = models.URLField(default=_generate_unique_uri)
     name = models.CharField(default='My ChatRoom', max_length=100)
 
+    def __str__(self):
+        return self.name
+    
+
 
 class ChatSessionMessage(TrackableDateModel):
     """Store messages for a session."""
