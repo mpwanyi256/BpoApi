@@ -36,9 +36,10 @@ class ChatSession(TrackableDateModel):
     owner = models.ForeignKey(User, on_delete=models.PROTECT)
     uri = models.URLField(default=_generate_unique_uri)
     name = models.CharField(default='My ChatRoom', max_length=100)
+    room_type = models.CharField(default='P', max_length=10)
 
     def __str__(self):
-        return self.name
+        return self.name + ' ' + self.room_type
     
 
 
@@ -63,3 +64,5 @@ class ChatSessionMember(TrackableDateModel):
         ChatSession, related_name='members', on_delete=models.PROTECT
     )
     user = models.ForeignKey(User, on_delete=models.PROTECT)
+
+    

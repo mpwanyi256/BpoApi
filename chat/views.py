@@ -26,23 +26,19 @@ class ChatSessionView(APIView):
 
 
     def get(self, request, *args, **kwargs):
-        user = request.user
-
         # We Want To get All Chat Rooms Created by the Authenticated user
         rooms = ChatSession.objects.all()
         serializer = ChatSessionSerializer(rooms, many=True)
         return Response(serializer.data)
 
-    #Post Function Creates A New Chat Room
     def post(self, request, *args, **kwargs):
         """create a new chat session."""
         user = request.user
 
-        form = self.form_class(request.POST)
-
         roomName = request.data['room'] #form.cleaned_data['room']
+        roomtype = request.data['type']
 
-        chat_session = ChatSession.objects.create(owner=user, name=roomName)
+        chat_session = ChatSession.objects.create(owner=user, name=roomName, room_type=roomtype)
 
         return Response({
             'status': 'SUCCESS', 'uri': chat_session.uri,
@@ -53,16 +49,17 @@ class ChatSessionView(APIView):
         """Add a user to a chat session."""
         User = get_user_model()
 
-        uri = kwargs['uri']
+        uri =  kwargs['uri']
         username = request.data['username']
         user = User.objects.get(username=username)
 
         chat_session = ChatSession.objects.get(uri=uri)
         owner = chat_session.owner
 
-        if owner != user:  # Only allow non owners join the room             chat_session.members.get_or_create(
+        if owner != user:  # Only allow non owners join the room             
+            chat_session.members.get_or_create(
                 user=user, chat_session=chat_session
-            
+            )
 
         owner = deserialize_user(owner)
         members = [
@@ -70,11 +67,12 @@ class ChatSessionView(APIView):
             for chat_session in chat_session.members.all()
         ]
         members.insert(0, owner)  # Make the owner the first member
+
         return Response ({
             'status': 'SUCCESS', 'members': members,
             'message': '%s joined that chat' % user.username,
             'user': deserialize_user(user)
-        })
+        }) 
     
 
 class ChatSessionMessageView(APIView):
