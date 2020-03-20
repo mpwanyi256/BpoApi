@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from .models import (
     ChatSession, ChatSessionMember, ChatSessionMessage, deserialize_user
 )
@@ -10,35 +11,51 @@ from rest_framework import permissions
 
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from .serializers import ChatSessionSerializer
+from .serializers import ChatSessionSerializer, UserSerializer, ChatSessionMemberSerializer
 
 #Forms
 from .chatRoom_form import chatroomForm
 
+class UsersView(APIView):
+    #User Must Be Authenticated To do anything
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+        
 
 class ChatSessionView(APIView):
     """Manage Chat sessions."""
     #User Must Be Authenticated To do anything
     permission_classes = (permissions.IsAuthenticated,)
-    
-    #Form 
-    form_class = chatroomForm
-
 
     def get(self, request, *args, **kwargs):
         # We Want To get All Chat Rooms Created by the Authenticated user
         rooms = ChatSession.objects.all()
+        members = ChatSessionMember.objects.all()
+        members_serializer = ChatSessionMemberSerializer(members, many=True)
         serializer = ChatSessionSerializer(rooms, many=True)
-        return Response(serializer.data)
+        return Response({ 'rooms': serializer.data, 'members': members_serializer.data })
 
     def post(self, request, *args, **kwargs):
         """create a new chat session."""
         user = request.user
 
-        roomName = request.data['room'] #form.cleaned_data['room']
+        roomName = request.data['room']
         roomtype = request.data['type']
 
         chat_session = ChatSession.objects.create(owner=user, name=roomName, room_type=roomtype)
+        
+        if roomtype == 'r': # Add The other user in the private chat On creating the chatroom
+            chatWith = request.data['chatWith']
+            usertoAdd = User.objects.get(username=chatWith)
+            
+            chat_session = ChatSession.objects.get(uri=chat_session.uri)
+            owner = chat_session.owner
+            if owner != chatWith:
+                chat_session.members.get_or_create(user=usertoAdd, chat_session=chat_session)
 
         return Response({
             'status': 'SUCCESS', 'uri': chat_session.uri,
@@ -51,15 +68,15 @@ class ChatSessionView(APIView):
 
         uri =  kwargs['uri']
         username = request.data['username']
+        roomtype = request.data['type']
         user = User.objects.get(username=username)
 
         chat_session = ChatSession.objects.get(uri=uri)
         owner = chat_session.owner
 
-        if owner != user:  # Only allow non owners join the room             
-            chat_session.members.get_or_create(
-                user=user, chat_session=chat_session
-            )
+        if owner != user:  # Only allow non owners join the room  
+            if roomtype == 'p': # Only Add members to public rooms   
+                chat_session.members.get_or_create(user=user, chat_session=chat_session)
 
         owner = deserialize_user(owner)
         members = [
@@ -73,8 +90,7 @@ class ChatSessionView(APIView):
             'message': '%s joined that chat' % user.username,
             'user': deserialize_user(user)
         }) 
-    
-
+   
 class ChatSessionMessageView(APIView):
     """Create/Get Chat session messages."""
 
@@ -93,19 +109,21 @@ class ChatSessionMessageView(APIView):
             'messages': messages
         })
 
+    
     def post(self, request, *args, **kwargs):
         """create a new message in a chat session."""
         uri = kwargs['uri']
         message = request.data['message']
+        message_type = request.data['type']
 
         user = request.user
         chat_session = ChatSession.objects.get(uri=uri)
 
         ChatSessionMessage.objects.create(
-            user=user, chat_session=chat_session, message=message
+            user=user, chat_session=chat_session, message=message , message_type = message_type
         )
 
         return Response ({
-            'status': 'SUCCESS', 'uri': chat_session.uri, 'message': message,
+            'status': 'SUCCESS', 'uri': chat_session.uri, 'message': message, 'type': message_type,
             'user': deserialize_user(user)
         })

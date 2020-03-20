@@ -51,10 +51,11 @@ class ChatSessionMessage(TrackableDateModel):
         ChatSession, related_name='messages', on_delete=models.PROTECT
     )
     message = models.TextField(max_length=2000)
+    message_type = models.TextField(default='text', max_length=20)
 
     def to_json(self):
         """deserialize message to JSON."""
-        return {'user': deserialize_user(self.user), 'message': self.message}
+        return {'user': deserialize_user(self.user), 'message': self.message, 'type': self.message_type}
 
 
 class ChatSessionMember(TrackableDateModel):

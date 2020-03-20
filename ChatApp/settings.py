@@ -1,4 +1,7 @@
 import os
+# import django_heroku
+# import dj_database_url
+# from decouple import config
 from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -35,7 +38,7 @@ INSTALLED_APPS = [
     'djoser',
 
     # django-notifs -- install and run migrations
-    'notifications'
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -71,9 +74,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ChatApp.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+# https://docs.djangoproject.com/en/3.0/ref/settings/#databases django.db.backends.sqlite3
+'''
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': 'bpo',
+    'USER': 'postgres',
+    'PASSWORD': 'birmingham256',
+    'HOST': 'localhost',
+    'PORT': '49206'
+    
+'''
 
 DATABASES = {
     'default': {
