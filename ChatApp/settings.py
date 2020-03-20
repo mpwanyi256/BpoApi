@@ -1,7 +1,7 @@
 import os
-# import django_heroku
-# import dj_database_url
-# from decouple import config
+import django_heroku
+import dj_database_url
+from decouple import config
 from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -17,7 +17,10 @@ SECRET_KEY = '2xcv!zly*4o_9=r2$mutrv8e2(s1rrd%19q*r^n8=i&)jrbao+'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+]
 
 
 # Application definition
@@ -76,22 +79,17 @@ WSGI_APPLICATION = 'ChatApp.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases django.db.backends.sqlite3
-'''
-    'ENGINE': 'django.db.backends.postgresql',
-    'NAME': 'bpo',
-    'USER': 'postgres',
-    'PASSWORD': 'birmingham256',
-    'HOST': 'localhost',
-    'PORT': '49206'
-    
-'''
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
+# Heroku database connection
+DATABASES = {'default': dj_database_url.config(
+    conn_max_age=600, ssl_require=True)}
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
 
 
 # Password validation
